@@ -1,4 +1,11 @@
-<style>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bingo Cronosfera</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tektur:wght@800&family=Tiny5&display=swap" rel="stylesheet">
+  <style>
   body {
     font-family: Arial, sans-serif;
     display: flex;
@@ -131,3 +138,129 @@
     }
   }
 </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="fundo-cartela" id="fundo">
+      <div id="cartela" class="cartela">
+        <div class="celula" contenteditable="true"></div>
+        <div class="celula" contenteditable="true"></div>
+        <div class="celula" contenteditable="true"></div>
+        <div class="celula" contenteditable="true"></div>
+        <div class="celula" contenteditable="true"></div>
+        <div class="celula" contenteditable="true"></div>
+        <div class="celula" contenteditable="true"></div>
+        <div class="celula" contenteditable="true"></div>
+        <div class="celula" contenteditable="true"></div>
+      </div>
+    </div>
+    <div class="direita">
+      <div class="botoes">
+        <button onclick="baixarCartela()">Salvar Imagem</button>
+        <button onclick="resetarCartela()">Resetar Cartela</button>
+      </div>
+      <div class="instrucoes">
+        <p>- Personalize como quiser a cartela</p>
+        <p>- Dê 2 cliques para marcar e desmarcar</p>
+        <p>- Aperte o botão de resetar pra voltar a cartela original</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+  const textosPadrao = [
+    "Guto mentir",
+    "Oli pede aumento",
+    "Oda é baiano",
+    "Menção cobra preta",
+    "Print pro twitter",
+    "Guto revela fetiche",
+    "Guto rouba cravada",
+    "Live dando ruim",
+    "Oli fala \"ah cara\""
+  ];
+
+  const celulas = document.querySelectorAll('.celula');
+
+  function resizeText(element) {
+    let fontSize = 28;
+    const minFontSize = 10;
+    element.style.fontSize = fontSize + 'px';
+    while (element.scrollHeight > element.clientHeight && fontSize > minFontSize) {
+      fontSize--;
+      element.style.fontSize = fontSize + 'px';
+    }
+  }
+
+  function salvarLocalmente() {
+    try {
+      const textos = Array.from(celulas).map(c => c.innerText);
+      localStorage.setItem('bingoTextos', JSON.stringify(textos));
+    } catch (e) {
+      console.warn('LocalStorage não disponível:', e);
+    }
+  }
+
+  function carregarDoLocalStorage() {
+    try {
+      const textosSalvos = JSON.parse(localStorage.getItem('bingoTextos'));
+      if (textosSalvos && textosSalvos.length === celulas.length) {
+        celulas.forEach((celula, index) => {
+          celula.innerText = textosSalvos[index];
+        });
+      } else {
+        resetarCartela();
+      }
+    } catch (e) {
+      console.warn('LocalStorage não disponível ou dados corrompidos:', e);
+      resetarCartela();
+    }
+  }
+
+  celulas.forEach((celula, index) => {
+    celula.addEventListener('input', () => {
+      resizeText(celula);
+      salvarLocalmente();
+    });
+
+    celula.addEventListener('dblclick', () => {
+      celula.classList.toggle('marcada');
+    });
+
+    resizeText(celula);
+  });
+
+function baixarCartela() {
+  document.activeElement.blur();
+  const fundo = document.getElementById('fundo');
+
+  html2canvas(fundo, {
+    useCORS: true,
+    allowTaint: false,
+    backgroundColor: null,
+    imageTimeout: 0
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'cartela-bingo.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }).catch(err => {
+    alert('Erro ao gerar a imagem. Tente novamente.');
+    console.error(err);
+  });
+}
+
+  function resetarCartela() {
+    celulas.forEach((celula, index) => {
+      celula.innerText = textosPadrao[index] || "";
+      celula.classList.remove('marcada');
+      celula.style.fontSize = '28px';
+    });
+    salvarLocalmente();
+  }
+
+  carregarDoLocalStorage();
+</script>
+</body>
+</html>
